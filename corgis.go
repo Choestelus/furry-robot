@@ -26,13 +26,14 @@ func timedSIGTERM(p *os.Process, d time.Duration) {
 }
 
 type JobScheduler struct {
-	Cmd        *exec.Cmd
-	Type       JobType
-	ExecPeriod time.Duration
-	Wg         *sync.WaitGroup
-	OutPipe    *io.ReadCloser
-	ErrPipe    *io.ReadCloser
-	Status     bool
+	Cmd           *exec.Cmd
+	Type          JobType
+	ExecPeriod    time.Duration
+	Wg            *sync.WaitGroup
+	OutPipe       *io.ReadCloser
+	ErrPipe       *io.ReadCloser
+	CmdStatus     bool
+	ProcessStatus bool
 }
 
 func (j *JobScheduler) renewCmd() {
