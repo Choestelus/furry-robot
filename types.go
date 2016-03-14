@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+type JobType int
+
+const (
+	Streaming JobType = iota
+	Timed     JobType = iota
+)
+
 type JobScheduler struct {
 	Cmd           *exec.Cmd
 	Type          JobType

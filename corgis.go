@@ -11,13 +11,6 @@ import (
 	"time"
 )
 
-type JobType int
-
-const (
-	Streaming JobType = iota
-	Timed     JobType = iota
-)
-
 func timedSIGTERM(p *os.Process, d time.Duration) {
 	log.Printf("timedSIGTERM called\n")
 	var _ = <-time.After(d)
