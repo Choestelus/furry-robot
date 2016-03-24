@@ -27,7 +27,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("dbconn error %v\n", err)
 	}
-	//DB.AutoMigrate(&RawVMData{})
+	DB.AutoMigrate(&RawVMData{})
 }
 
 func GetArguments(pid int) []string {
@@ -125,17 +125,17 @@ func (j *JobScheduler) ExecStreaming() {
 			if j.LType == LRead {
 				vminfo := RawVMData{
 					VMName:      i,
-					LatencyRead: e,
+					LatencyRead: e / j.ExecPeriod.Seconds(),
 				}
 				fmt.Printf("%v\n", vminfo)
-				DB.Where(RawVMData{VMName: i}).Assign(RawVMData{LatencyRead: e}).FirstOrCreate(&vminfo)
+				DB.Where(RawVMData{VMName: i}).Assign(RawVMData{LatencyRead: e / j.ExecPeriod.Seconds()}).FirstOrCreate(&vminfo)
 			} else if j.LType == LWrite {
 				vminfo := RawVMData{
 					VMName:       i,
-					LatencyWrite: e,
+					LatencyWrite: e / j.ExecPeriod.Seconds(),
 				}
 				fmt.Printf("%v\n", vminfo)
-				DB.Where(RawVMData{VMName: i}).Assign(RawVMData{LatencyWrite: e}).FirstOrCreate(&vminfo)
+				DB.Where(RawVMData{VMName: i}).Assign(RawVMData{LatencyWrite: e / j.ExecPeriod.Seconds()}).FirstOrCreate(&vminfo)
 
 			}
 		}
@@ -178,12 +178,14 @@ func (j *JobScheduler) ExecTimed() {
 					iowrite, _ := tmp["write"].(float64)
 					vminfo := RawVMData{
 						VMName:    argList[2],
-						IOPSRead:  ioread,
-						IOPSWrite: iowrite,
+						IOPSRead:  ioread / j.ExecPeriod.Seconds(),
+						IOPSWrite: iowrite / j.ExecPeriod.Seconds(),
 					}
 					fmt.Printf("\n[%v]\n", vminfo)
 					//DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
-					DB.Where(RawVMData{VMName: argList[2]}).Assign(RawVMData{IOPSRead: ioread, IOPSWrite: iowrite}).FirstOrCreate(&vminfo)
+					DB.Where(RawVMData{VMName: argList[2]}).
+						Assign(RawVMData{IOPSRead: ioread / j.ExecPeriod.Seconds(), IOPSWrite: iowrite / j.ExecPeriod.Seconds()}).
+						FirstOrCreate(&vminfo)
 					//DB.Create(&vminfo)
 				}
 			}
