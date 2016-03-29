@@ -2,7 +2,6 @@ package corgis
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -46,10 +45,10 @@ func GetArguments(pid int) []string {
 	return strings.Fields(string(output))
 }
 func timedSIGTERM(p *os.Process, d time.Duration) {
-	log.Printf("timedSIGTERM called\n")
+	//log.Printf("timedSIGTERM called\n")
 	var _ = <-time.After(d)
 	err := p.Signal(syscall.SIGTERM)
-	log.Printf("SIGTERM sent\n")
+	//log.Printf("SIGTERM sent\n")
 	if err != nil {
 		log.Panicf("timedSIGTERM Panicking: %v\n", err)
 	}
@@ -65,7 +64,8 @@ func DecodeStream(r io.Reader) []interface{} {
 	if err != nil {
 		log.Fatalf("openToken error: %v\n", err)
 	}
-	fmt.Println("openToken:", openToken)
+	//fmt.Println("openToken:", openToken)
+	var _ = openToken
 	res := make([]interface{}, 0)
 	for decoder.More() {
 		var m interface{}
@@ -80,7 +80,8 @@ func DecodeStream(r io.Reader) []interface{} {
 	if err != nil {
 		log.Fatalf("closeToken error: %v\n", err)
 	}
-	fmt.Println("closeToken:", closeToken)
+	//fmt.Println("closeToken:", closeToken)
+	var _ = closeToken
 	return res
 }
 
@@ -90,7 +91,7 @@ func (j *JobScheduler) InitCmd() {
 	j.ErrBuf.Reset()
 	j.Cmd.Stdout = &j.OutBuf
 	j.Cmd.Stderr = &j.ErrBuf
-	log.Printf("Initialized job\n")
+	//log.Printf("Initialized job\n")
 }
 
 // Curently uses for read&write latencies
@@ -99,9 +100,9 @@ func (j *JobScheduler) ExecStreaming() {
 	if err != nil {
 		log.Panicf("cmd start error: %v\n", err)
 	}
-	log.Printf("job started\n")
+	//log.Printf("job started\n")
 	go timedSIGTERM(j.Cmd.Process, j.ExecPeriod)
-	log.Printf("waiting for job terminate\n")
+	//log.Printf("waiting for job terminate\n")
 	err = j.Cmd.Wait()
 	if err != nil {
 		log.Panicf("cmd wait error: %v\n", err)
@@ -121,7 +122,7 @@ func (j *JobScheduler) ExecStreaming() {
 				m[vmName] += ltc
 			}
 		}
-		fmt.Printf("%v %v\n", len(m), m)
+		//fmt.Printf("%v %v\n", len(m), m)
 		for i, e := range m {
 			if j.LType == LRead {
 
@@ -133,7 +134,7 @@ func (j *JobScheduler) ExecStreaming() {
 					LatencyRead: e / j.ExecPeriod.Seconds(),
 					ISSSD:       storageType.CurrentPool == "SSD",
 				}
-				fmt.Printf("%v\n", vminfo)
+				//fmt.Printf("%v\n", vminfo)
 				DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
 			} else if j.LType == LWrite {
 
@@ -145,7 +146,7 @@ func (j *JobScheduler) ExecStreaming() {
 					LatencyWrite: e / j.ExecPeriod.Seconds(),
 					ISSSD:        storageType.CurrentPool == "SSD",
 				}
-				fmt.Printf("%v\n", vminfo)
+				//fmt.Printf("%v\n", vminfo)
 				DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
 
 			}
@@ -171,8 +172,8 @@ func (j *JobScheduler) ExecTimed() {
 	}
 	if j.Cmd.ProcessState.Success() {
 		j.Res = DecodeStream(&j.OutBuf)
-		fmt.Printf("-->%v\n", j.Res)
-		for i, e := range j.Res {
+		//fmt.Printf("-->%v\n", j.Res)
+		for _, e := range j.Res {
 			tmp, _ := e.(map[string]interface{})
 			s_pid, _ := tmp["pid"].(string)
 			var e_pid int
@@ -185,7 +186,7 @@ func (j *JobScheduler) ExecTimed() {
 			argList := GetArguments(e_pid)
 			if len(argList) != 0 {
 				if argList[0] == "/usr/libexec/qemu-kvm" {
-					fmt.Printf("%v %v %v\n", i, tmp, argList[2])
+					//fmt.Printf("%v %v %v\n", i, tmp, argList[2])
 					ioread, _ := tmp["read"].(float64)
 					iowrite, _ := tmp["write"].(float64)
 
@@ -199,8 +200,8 @@ func (j *JobScheduler) ExecTimed() {
 						IOPSWrite: iowrite / j.ExecPeriod.Seconds(),
 						ISSSD:     storageType.CurrentPool == "SSD",
 					}
-					fmt.Printf("\n\n---->[%v]\n\n", vminfo)
-					fmt.Printf("\n[%v]\n", vminfo)
+					//fmt.Printf("\n\n---->[%v]\n\n", vminfo)
+					//fmt.Printf("\n[%v]\n", vminfo)
 					DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
 				}
 			}
@@ -220,6 +221,7 @@ func (j *JobScheduler) Execute() {
 }
 
 func AssignAverage() {
+	log.Printf("AssignAverage Invoked\n")
 	var HDDVMList []RawVMData
 	var SSDVMList []RawVMData
 	DB.Model(&RawVMData{}).Where("isssd = ?", true).Find(&SSDVMList)
