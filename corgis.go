@@ -93,6 +93,7 @@ func (j *JobScheduler) InitCmd() {
 	log.Printf("Initialized job\n")
 }
 
+// Curently uses for read&write latencies
 func (j *JobScheduler) ExecStreaming() {
 	err := j.Cmd.Start()
 	if err != nil {
@@ -123,19 +124,29 @@ func (j *JobScheduler) ExecStreaming() {
 		fmt.Printf("%v %v\n", len(m), m)
 		for i, e := range m {
 			if j.LType == LRead {
+
+				var storageType TiramisuStorage
+				DB.First(&storageType, "vm_name = ?", i)
+
 				vminfo := RawVMData{
 					VMName:      i,
 					LatencyRead: e / j.ExecPeriod.Seconds(),
+					ISSSD:       storageType.CurrentPool == "SSD",
 				}
 				fmt.Printf("%v\n", vminfo)
-				DB.Where(RawVMData{VMName: i}).Assign(RawVMData{LatencyRead: e / j.ExecPeriod.Seconds()}).FirstOrCreate(&vminfo)
+				DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
 			} else if j.LType == LWrite {
+
+				var storageType TiramisuStorage
+				DB.First(&storageType, "vm_name = ?", i)
+
 				vminfo := RawVMData{
 					VMName:       i,
 					LatencyWrite: e / j.ExecPeriod.Seconds(),
+					ISSSD:        storageType.CurrentPool == "SSD",
 				}
 				fmt.Printf("%v\n", vminfo)
-				DB.Where(RawVMData{VMName: i}).Assign(RawVMData{LatencyWrite: e / j.ExecPeriod.Seconds()}).FirstOrCreate(&vminfo)
+				DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
 
 			}
 		}
@@ -145,6 +156,7 @@ func (j *JobScheduler) ExecStreaming() {
 
 }
 
+// Currently uses for IOPS
 func (j *JobScheduler) ExecTimed() {
 	err := j.Cmd.Start()
 	if err != nil {
@@ -176,17 +188,20 @@ func (j *JobScheduler) ExecTimed() {
 					fmt.Printf("%v %v %v\n", i, tmp, argList[2])
 					ioread, _ := tmp["read"].(float64)
 					iowrite, _ := tmp["write"].(float64)
+
+					var storageType TiramisuStorage
+					DB.First(&storageType, "vm_name = ?", argList[2])
+					// fmt.Printf("\n\n---->[%v]\n\n", storageType)
+
 					vminfo := RawVMData{
 						VMName:    argList[2],
 						IOPSRead:  ioread / j.ExecPeriod.Seconds(),
 						IOPSWrite: iowrite / j.ExecPeriod.Seconds(),
+						ISSSD:     storageType.CurrentPool == "SSD",
 					}
+					fmt.Printf("\n\n---->[%v]\n\n", vminfo)
 					fmt.Printf("\n[%v]\n", vminfo)
-					//DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
-					DB.Where(RawVMData{VMName: argList[2]}).
-						Assign(RawVMData{IOPSRead: ioread / j.ExecPeriod.Seconds(), IOPSWrite: iowrite / j.ExecPeriod.Seconds()}).
-						FirstOrCreate(&vminfo)
-					//DB.Create(&vminfo)
+					DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
 				}
 			}
 		}
