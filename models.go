@@ -26,3 +26,17 @@ type TiramisuStorage struct {
 func (TiramisuStorage) TableName() string {
 	return "tiramisu_storage"
 }
+
+type TiramisuState struct {
+	Name        string  `gorm:"column:vm_name;primary_key"`
+	Latency     float64 `gorm:"column:latency;type:double precision"`
+	IOPS        float64 `gorm:"column:iops;type:double precision"`
+	Latency_HDD float64 `gorm:"column:latency_hdd;type:double precision"`
+	IOPS_HDD    float64 `gorm:"column:iops_hdd;type:double precision"`
+	Latency_SSD float64 `gorm:"column:latency_ssd;type:double precision"`
+	IOPS_SSD    float64 `gorm:"column:iops_ssd;type:double precision"`
+}
+
+func (TiramisuState) TableName() string {
+	return "tiramisu_state"
+}
