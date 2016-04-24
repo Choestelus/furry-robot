@@ -11,23 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"gopkg.in/pipe.v2"
 )
-
-var (
-	DB *gorm.DB
-)
-
-func init() {
-	var err error
-	DB, err = gorm.Open("postgres", "user=postgres password=12344321 dbname=tiramisu sslmode=disable")
-	if err != nil {
-		log.Fatalf("dbconn error %v\n", err)
-	}
-	DB.AutoMigrate(&RawVMData{})
-}
 
 func GetArguments(pid int) []string {
 	if pid == 0 {
