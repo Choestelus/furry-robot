@@ -206,6 +206,7 @@ func (j *JobScheduler) Execute() {
 	}
 }
 
+// TODO: Refactor avg parameters as module.
 func AssignAverage() {
 	log.Printf("AssignAverage Invoked\n")
 	var HDDVMList []RawVMData
