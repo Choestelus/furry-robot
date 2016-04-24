@@ -207,6 +207,26 @@ func (j *JobScheduler) Execute() {
 }
 
 // TODO: Refactor avg parameters as module.
+
+func calcAvgIOPS(isssd bool, pVMList *[]RawVMData) (avgIOPS float64) {
+	DB.Model(&RawVMData{}).Where("isssd = ?", isssd).Find(pVMList)
+	for _, e := range *pVMList {
+		avgIOPS += e.IOPSRead + e.IOPSWrite
+	}
+	avgIOPS = (0.5 * avgIOPS) / float64(len(*pVMList))
+
+	return
+}
+
+func calcAvgLatency(isssd bool, pVMList *[]RawVMData) (avgLatency float64) {
+	DB.Model(&RawVMData{}).Where("isssd = ?", isssd).Find(pVMList)
+	for _, e := range *pVMList {
+		avgLatency += e.LatencyRead + e.LatencyWrite
+	}
+	avgLatency = (0.5 * avgLatency) / float64(len(*pVMList))
+	return
+}
+
 func AssignAverage() {
 	log.Printf("AssignAverage Invoked\n")
 	var HDDVMList []RawVMData
@@ -227,10 +247,10 @@ func AssignAverage() {
 		avgSSDIOPS += e.IOPSRead + e.IOPSWrite
 		avgSSDLatency += e.LatencyRead + e.LatencyWrite
 	}
-	avgHDDIOPS = (0.5 * avgHDDIOPS) / float64(len(HDDVMList))
-	avgHDDLatency = (0.5 * avgHDDLatency) / float64(len(HDDVMList))
-	avgSSDIOPS = (0.5 * avgSSDIOPS) / float64(len(SSDVMList))
-	avgSSDLatency = (0.5 * avgSSDLatency) / float64(len(SSDVMList))
+	avgHDDIOPS = calcAvgIOPS(false, &HDDVMList)
+	avgHDDLatency = calcAvgLatency(false, &HDDVMList)
+	avgSSDIOPS = calcAvgIOPS(true, &SSDVMList)
+	avgSSDLatency = calcAvgLatency(true, &SSDVMList)
 
 	for _, e := range HDDVMList {
 		tiramisu_state := TiramisuState{
