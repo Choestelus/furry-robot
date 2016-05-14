@@ -16,7 +16,7 @@ type StatusCtn struct {
 
 func HttpServe() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", StatusHandler).Methods("POST")
+	r.HandleFunc("/status", StatusHandler).Methods("POST")
 	http.Handle("/", r)
 
 	n := negroni.Classic()
