@@ -16,5 +16,6 @@ func init() {
 	if err != nil {
 		log.Fatalf("dbconn error %v\n", err)
 	}
+	DB.LogMode(false)
 	DB.AutoMigrate(&RawVMData{})
 }

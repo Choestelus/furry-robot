@@ -2,6 +2,7 @@ package corgis
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -121,7 +122,11 @@ func (j *JobScheduler) ExecStreaming() {
 					ISSSD:       storageType.CurrentPool == "SSD",
 				}
 				//fmt.Printf("%v\n", vminfo)
-				DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
+				if (i != "35monitor_HDD" && i != "35monitor_SSD") ||
+					(i == "35monitor_HDD" && updatingFlagHDD == true) ||
+					(i == "35monitor_SSD" && updatingFlagSSD == true) {
+					DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
+				}
 			} else if j.LType == LWrite {
 
 				var storageType TiramisuStorage
@@ -133,7 +138,14 @@ func (j *JobScheduler) ExecStreaming() {
 					ISSSD:        storageType.CurrentPool == "SSD",
 				}
 				//fmt.Printf("%v\n", vminfo)
-				DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
+				if (i != "35monitor_HDD" && i != "35monitor_SSD") ||
+					(i == "35monitor_HDD" && updatingFlagHDD == true) ||
+					(i == "35monitor_SSD" && updatingFlagSSD == true) {
+					if i == "35monitor_HDD" || i == "35monitor_SSD" {
+						fmt.Printf("----> name: %v ufHDD: %v ufSSD: %v\n", i, updatingFlagHDD, updatingFlagSSD)
+					}
+					DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
+				}
 
 			}
 		}
@@ -188,7 +200,14 @@ func (j *JobScheduler) ExecTimed() {
 					}
 					//fmt.Printf("\n\n---->[%v]\n\n", vminfo)
 					//fmt.Printf("\n[%v]\n", vminfo)
-					DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
+					if (argList[2] != "35monitor_HDD" && argList[2] != "35monitor_SSD") ||
+						(argList[2] == "35monitor_HDD" && updatingFlagHDD == true) ||
+						(argList[2] == "35monitor_SSD" && updatingFlagSSD == true) {
+						if argList[2] == "35monitor_HDD" || argList[2] == "35monitor_SSD" {
+							fmt.Printf("----> name: %v ufHDD: %v ufSSD: %v\n", argList[2], updatingFlagHDD, updatingFlagSSD)
+						}
+						DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
+					}
 				}
 			}
 		}
