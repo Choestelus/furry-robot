@@ -140,9 +140,10 @@ func (j *JobScheduler) ExecStreaming() {
 				//fmt.Printf("%v\n", vminfo)
 				if (i != "35monitor_HDD" && i != "35monitor_SSD") ||
 					(i == "35monitor_HDD" && updatingFlagHDD == true) ||
-					(i == "35monitor_SSD" && updatingFlagSSD == true) {
+					(i == "35monitor_SSD" && updatingFlagSSD == true) ||
+					true {
 					if i == "35monitor_HDD" || i == "35monitor_SSD" {
-						fmt.Printf("----> name: %v ufHDD: %v ufSSD: %v\n", i, updatingFlagHDD, updatingFlagSSD)
+						// fmt.Printf("[latency]----> name: %v ufHDD: %v ufSSD: %v\n", i, updatingFlagHDD, updatingFlagSSD)
 					}
 					DB.Where(RawVMData{VMName: i}).Assign(vminfo).FirstOrCreate(&vminfo)
 				}
@@ -161,9 +162,9 @@ func (j *JobScheduler) ExecTimed() {
 	if err != nil {
 		log.Panicf("cmd start error: %v\n", err)
 	}
-	log.Printf("job started\n")
+	//log.Printf("job started\n")
 	go timedSIGTERM(j.Cmd.Process, j.ExecPeriod)
-	log.Printf("waiting for job terminate\n")
+	//log.Printf("waiting for job terminate\n")
 	err = j.Cmd.Wait()
 	if err != nil {
 		log.Panicf("cmd wait error: %v\n", err)
@@ -202,9 +203,10 @@ func (j *JobScheduler) ExecTimed() {
 					//fmt.Printf("\n[%v]\n", vminfo)
 					if (argList[2] != "35monitor_HDD" && argList[2] != "35monitor_SSD") ||
 						(argList[2] == "35monitor_HDD" && updatingFlagHDD == true) ||
-						(argList[2] == "35monitor_SSD" && updatingFlagSSD == true) {
+						(argList[2] == "35monitor_SSD" && updatingFlagSSD == true) ||
+						false {
 						if argList[2] == "35monitor_HDD" || argList[2] == "35monitor_SSD" {
-							fmt.Printf("----> name: %v ufHDD: %v ufSSD: %v\n", argList[2], updatingFlagHDD, updatingFlagSSD)
+							fmt.Printf("[iops]----> name: %v ufHDD: %v ufSSD: %v\n", argList[2], updatingFlagHDD, updatingFlagSSD)
 						}
 						DB.Where(RawVMData{VMName: argList[2]}).Assign(vminfo).FirstOrCreate(&vminfo)
 					}

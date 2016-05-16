@@ -6,9 +6,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/codegangsta/negroni"
+	"github.com/fatih/color"
 	"github.com/gorilla/mux"
 )
 
@@ -24,9 +27,15 @@ func HttpServe() {
 	r.HandleFunc("/status", StatusHandler).Methods("POST")
 	http.Handle("/", r)
 
-	n := negroni.Classic()
+	//n := negroni.Classic()
+	lightBlue := color.New(color.FgCyan).Add(color.Bold).SprintfFunc()
+	// colorLogger := &negroni.Logger{log.New(os.Stdout, "[negroni] ", 0)}
+	colorLogger := &negroni.Logger{log.New(os.Stdout, lightBlue("%v [negroni] ", time.Now().String()), 0)}
+
+	n := negroni.New(negroni.NewRecovery(), colorLogger)
 	n.UseHandler(r)
 
+	log.Println(lightBlue("Listening on port 44005"))
 	log.Fatal(http.ListenAndServe(":44005", n))
 }
 
@@ -49,6 +58,7 @@ func StatusHandler(rw http.ResponseWriter, req *http.Request) {
 			mutex.Unlock()
 		}
 	}
+	log.Printf("----> clearflag: uFHDD == %v uFSSD == %v\n", updatingFlagHDD, updatingFlagSSD)
 }
 
 func CallPostmark(where string) {
@@ -78,6 +88,7 @@ func CallPostmark(where string) {
 		updatingFlagSSD = true
 		mutex.Unlock()
 	}
+	log.Printf("----> setflag: uFHDD == %v uFSSD == %v\n", updatingFlagHDD, updatingFlagSSD)
 	defer resp.Body.Close()
 EndFunc:
 	defer func() {
